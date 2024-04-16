@@ -6,6 +6,7 @@ use App\Models\Blog;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BlogResource;
+use Illuminate\Support\Facades\Validator;
 
 class BlogController extends Controller
 {
@@ -31,7 +32,21 @@ class BlogController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'title' => 'required',
+            'content' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 400);
+        }
+
+
+        $blog = new Blog();
+        $blog->title = $request->title;
+        $blog->content = $request->content;
+        $blog->save();
+        return response()->json(['message' => 'Blog created successfully'], 201);
     }
 
     /**
@@ -52,7 +67,12 @@ class BlogController extends Controller
      */
     public function edit(Blog $blog)
     {
-        //
+        $blog = Blog::find($blog->id);
+        if ($blog) {
+            return response()->json(['data' => new BlogResource($blog)], 200);
+        } else {
+            return response()->json(['message' => 'Blog not found'], 404);
+        }
     }
 
     /**
@@ -60,7 +80,19 @@ class BlogController extends Controller
      */
     public function update(Request $request, Blog $blog)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'title' => 'required',
+            'content' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()], 400);
+        }
+
+        $blog->title = $request->title;
+        $blog->content = $request->content;
+        $blog->save();
+        return response()->json(['message' => 'Blog updated successfully'], 200);
     }
 
     /**
@@ -68,6 +100,11 @@ class BlogController extends Controller
      */
     public function destroy(Blog $blog)
     {
-        //
+        try {
+            $blog->delete();
+            return response()->json(['message' => 'Blog deleted successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Blog not found'], 404);
+        }
     }
 }
